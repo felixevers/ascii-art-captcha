@@ -56,6 +56,7 @@ class Captcha:
                 print("SOLVED!")
                 return True
             elif self.failed:
+                print(self._solution)
                 print("FAILED!")
                 return False
 
@@ -75,19 +76,29 @@ class Captcha:
         current_length: int = 0
 
         noise_characters: List[str] = list(printable + digits + ascii_letters)
-        font_list: List[str] = ["1943", "5lineoblique", "6x10", "alpha", "alphabet", "arrows", "banner", "banner4",
-                                "big", "bulbhead", "catwalk", "chunky", "colossal", "doom", "dotmatrix", "epic",
-                                "greek", "modular", "nancyj", "oldbanner", "os2", "pawp", "rounded", "shadow", "slant",
-                                "small", "smslant", "soft", "speed", "standard", "starwars", "univers", "varsit"]
+        font_list: List[str] = ["1943", "5lineoblique", "alpha", "alphabet", "arrows", "banner", "banner4",
+                                "big", "colossal", "doom", "dotmatrix", "epic",
+                                "modular", "nancyj", "oldbanner", "os2", "pawp", "rounded", "slant",
+                                "small", "smslant", "speed", "standard", "starwars", "univers", "varsit"]
 
         for character in solution:
-            ascii_art: str = text2art(character, font=choice(font_list))
+            font: str = choice(font_list)
+            ascii_art: str = text2art(character, font=font)
 
             character_distribution: Dict[str, int] = {character: ascii_art.count(character) for character in
                                                       set(ascii_art.replace("\r", "").replace("\n", "").replace(" ",
                                                                                                                 ""))}
             most_common_character: str = max(character_distribution, key=character_distribution.get)
-            ascii_art = ascii_art.replace(most_common_character, choice(["_", "-", "\\", "/", "+", "*"]))
+
+            special_characters: List[str] = ["-", "+", "!", "|", ":"]
+
+            replace_character: str = choice(special_characters)
+            if most_common_character.isdigit():
+                replace_character = choice(digits)
+            elif most_common_character.isalpha():
+                replace_character = choice(ascii_letters)
+
+            ascii_art = ascii_art.replace(most_common_character, replace_character)
 
             lines: List[str] = ascii_art.split("\r\n")
 
