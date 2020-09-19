@@ -1,7 +1,7 @@
 from art import text2art
-from typing import NoReturn, List
-from string import ascii_uppercase
-from random import choices
+from typing import NoReturn, List, Dict
+from string import ascii_uppercase, ascii_letters, digits, printable
+from random import choices, choice, randint
 
 
 class Captcha:
@@ -36,8 +36,12 @@ class Captcha:
         print()
 
     def check_user_input(self, prompt: str = "ENTER CODE > ") -> bool:
-        user_input: str = input(prompt)
-        return self.check(user_input)
+        try:
+            user_input: str = input(prompt)
+            return self.check(user_input)
+        except KeyboardInterrupt:
+            print()
+            return self.check("")
 
     def execute(self) -> bool:
         self.print()
@@ -70,8 +74,21 @@ class Captcha:
 
         current_length: int = 0
 
+        noise_characters: List[str] = list(printable + digits + ascii_letters)
+        font_list: List[str] = ["1943", "5lineoblique", "6x10", "alpha", "alphabet", "arrows", "banner", "banner4",
+                                "big", "bulbhead", "catwalk", "chunky", "colossal", "doom", "dotmatrix", "epic",
+                                "greek", "modular", "nancyj", "oldbanner", "os2", "pawp", "rounded", "shadow", "slant",
+                                "small", "smslant", "soft", "speed", "standard", "starwars", "univers", "varsit"]
+
         for character in solution:
-            ascii_art: str = text2art(character, font="random")
+            ascii_art: str = text2art(character, font=choice(font_list))
+
+            character_distribution: Dict[str, int] = {character: ascii_art.count(character) for character in
+                                                      set(ascii_art.replace("\r", "").replace("\n", "").replace(" ",
+                                                                                                                ""))}
+            most_common_character: str = max(character_distribution, key=character_distribution.get)
+            ascii_art = ascii_art.replace(most_common_character, choice(["_", "-", "\\", "/", "+", "*"]))
+
             lines: List[str] = ascii_art.split("\r\n")
 
             max_length: int = max(map(len, lines))
@@ -82,8 +99,10 @@ class Captcha:
 
                 base[index] += line
 
+            random_offset: int = randint(0, 5)
+
             for index in range(len(base)):
-                base[index] = base[index].ljust(current_length + max_length)
+                base[index] = base[index].ljust(current_length + max_length + random_offset)
 
             current_length = max(map(len, base))
 
@@ -92,6 +111,13 @@ class Captcha:
 
         while len(base[-1].strip()) == 0:
             del base[-1]
+
+        for noise_character in choices(noise_characters, k=randint(15, 30)):
+            base_index: int = randint(0, len(base) - 1)
+            line: str = base[base_index]
+            line_index: int = randint(0, len(line) - 1)
+
+            base[base_index] = line[:line_index] + noise_character + line[line_index + 1:]
 
         ascii_art: str = "\r\n".join(base)
 
